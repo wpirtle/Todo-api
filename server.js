@@ -32,8 +32,8 @@ app.get('/todos/:id', function (req, res) {
 
 // POST /todos
 app.post('/todos', function (req, res) {
-	var body = req.body;
-	body = _.pick(body, 'description', 'completed');
+
+	var body = _.pick(req.body, 'description', 'completed');
 
 	if (!_.isBoolean(body.completed) 
 		|| !_.isString(body.description) 
@@ -47,6 +47,19 @@ app.post('/todos', function (req, res) {
 	todos.push(body);
 
 	res.json(body);
+});
+
+// DELETE /todos/:id
+app.delete('/todos/:id', function (req, res) {
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, {id: todoId});
+
+	if (matchedTodo) {
+		todos = _.without(todos, matchedTodo);
+		res.json(matchedTodo);	
+	} else {
+		res.status(404).json({"error": "no todo found with id of " + todoId + "."});
+	}
 });
 
 app.listen(PORT, function () {
