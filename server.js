@@ -19,10 +19,18 @@ app.get('/todos', function (req, res) {
 	var filteredTodos = todos;
 
 	if (queryParams.hasOwnProperty('completed')) {
-		if (req.query.completed === 'true') {
+		if (queryParams.completed === 'true') {
 			filteredTodos = _.where(filteredTodos, {completed: true});
-		} else if (req.query.completed === 'false') {
+		} else if (queryParams.completed === 'false') {
 			filteredTodos = _.where(filteredTodos, {completed: false});
+		}
+	}
+
+	if (queryParams.hasOwnProperty('q')) {
+		if (queryParams.q.length > 0) {
+			filteredTodos = _.filter(filteredTodos, function (todo) {
+				return 	(todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1);
+			});
 		}
 	}
 
