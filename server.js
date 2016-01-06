@@ -41,11 +41,7 @@ app.get('/todos', function(req, res) {
 
 });
 
-db.sequelize.sync({force: false}).then(function () {
-	app.listen(PORT, function() {
-		console.log('Express listening on port ' + PORT + '!');
-	});
-});
+
 // GET /todos/:id
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
@@ -90,51 +86,40 @@ app.delete('/todos/:id', function(req, res) {
 	}, function () {
 			res.status(500).send();
 	});
-	// var matchedTodo = _.findWhere(todos, {
-	// 	id: todoId
-	// });
 
-	// if (matchedTodo) {
-	// 	todos = _.without(todos, matchedTodo);
-	// 	res.json(matchedTodo);
-	// } else {
-	// 	res.status(404).json({
-	// 		"error": "no todo found with id of " + todoId + "."
-	// 	});
-	// }
 });
 
 // PUT /todos/:id
 app.put('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
 	var body = _.pick(req.body, 'description', 'completed');
-	var validAttributes = {};
+	var attributes = {};
 
-	if (!matchedTodo) {
-		return res.status(404).json({
-			"error": "no todo found with id of " + todoId + "."
-		})
-	}
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		validAttributes.completed = body.completed;
-	} else if (body.hasOwnProberty('completed')) {
-		return res.status(400).json({
-			"error": "Completed value is invalid"
-		});
+	if (body.hasOwnProperty('completed')) {
+		attributes.completed = body.completed;
 	}
 
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-		validAttributes.description = body.description.trim();
-	} else if (body.hasOwnProperty('description')) {
-		return res.status(400).json({
-			"error": "Description value is invalid"
-		});
+	if (body.hasOwnProperty('description')) {
+		attributes.description = body.description;
 	}
 
-	_.extend(matchedTodo, validAttributes);
-	res.json(matchedTodo);
+	db.todo.findById(todoId).then(function (todo) {
+		if (todo) {
+			todo.update(attributes).then(function (todo) {
+				res.json(todo.toJSON());
+			}, function (e) {
+				res.status(400).json(e);
+			});
+		} else {
+			res.status(404).send();
+		}
+	}, function () {
+			res.status(500).send();
+	});
 });
 
+db.sequelize.sync({force: false}).then(function () {
+	app.listen(PORT, function() {
+		console.log('Express listening on port ' + PORT + '!');
+	});
+});
